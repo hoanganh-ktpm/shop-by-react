@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Cause:wght@100..900&display=swap');
+
+:root {
+    --text-color: #161823;
+    --font-weight: 400;
+    --font-family: 'Cause', cursive;
+    --default-layout-header-height: 100px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    font-optical-sizing: auto;
+    font-size: 1.2rem;
+    font-family: var(--font-family);
+    font-weight: var(--font-weight);
+    font-style: normal;
+    height: 1000px;
+}
+
+a {
+    color: black;
+    text-decoration: none;
+}
