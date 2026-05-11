@@ -12,10 +12,11 @@ const cx = classNames.bind(styles);
 
 function Search() {
     const inputRef = useRef();
-
+    const [showResult, setShowResult] = useState(true);
     const [searchResult, setSearchResult] = useState([]);
     const [searchContent, setSearchContent] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
 
     const debouncedValue = useDebounce(searchContent, 200);
 
@@ -26,39 +27,54 @@ function Search() {
     };
 
     const handleSearch = async () => {
-        if (!debouncedValue.trim()) {
-            setSearchResult([]);
-            return;
-        }
+        setIsLoading(true);
+
 
         try {
-            setIsLoading(true);
-            const response = await axios.get('http://localhost:3001/products', {
+            let response = await axios.get('http://localhost:3001/products', {
                 params: {
-                    category: debouncedValue,
+                    'category:contains': debouncedValue,
                 },
             });
-            setIsLoading(false);
+            if (response.data.length === 0) {
+                response = await axios.get('http://localhost:3001/products', {
+                    params: {
+                        'title:contains': debouncedValue,
+                    },
+                });
+            }
             setSearchResult(response.data);
         } catch (error) {
             alert('Failed call API, to know more pls open console');
+            setIsLoading(false);
             console.log(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
+        if (!debouncedValue.trim()) {
+            setSearchResult([]);
+            setIsLoading(false);
+            return;
+        }
         handleSearch();
+        const safetyTimer = setTimeout(() => {
+            setIsLoading(false);
+            console.warn('No result');
+        }, 3000);
+        return () => {
+            clearTimeout(safetyTimer);
+        };
     }, [debouncedValue]);
 
-    const handleClickOutside = () => {
-        setSearchResult([]);
-    };
     return (
         <HeadlessTippy
             interactive
-            visible={searchResult.length > 0}
+            visible={searchResult.length > 0 && showResult}
             maxWidth="none"
-            onClickOutside={() => handleClickOutside()}
+            onClickOutside={() => setShowResult(false)}
             render={(attrs) => {
                 return (
                     <div className={cx('search-result')} tabIndex="-1" {...attrs}>
@@ -75,6 +91,7 @@ function Search() {
                     value={searchContent}
                     onChange={(e) => setSearchContent(e.target.value)}
                     placeholder="What do u want to buy today?"
+                    onClick={() => setShowResult(true)}
                     ref={inputRef}
                 />
 
@@ -83,9 +100,7 @@ function Search() {
                         <FontAwesomeIcon icon={faCircleXmark} />
                     </button>
                 )}
-                {isLoading && (
-                    <FontAwesomeIcon className={cx('spinner')} icon={faSpinner} />
-                )}
+                {isLoading && <FontAwesomeIcon className={cx('spinner')} icon={faSpinner} />}
 
                 <button className={cx('search-btn')}>
                     <FontAwesomeIcon className={cx('search-icon')} icon={faSearch} />
